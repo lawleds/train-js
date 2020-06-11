@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 
-const router = require("./router");
+const router = require("./router.js");
 
 app.use(express.static("public"));
 app.set("views", "views"); //first argument is express option, second one is folder name
