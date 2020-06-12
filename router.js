@@ -1,19 +1,14 @@
-const express = require('express')
-const router = express.Router()
-const userController = require('./controllers/userController.js')
+const express = require("express");
+const router = express.Router();
+const userController = require("./controllers/userController.js");
 
-router.get('/', userController.home)
+router.get("/", userController.home);
 
-router.post('/register', userController.register)
+router.post("/register", userController.register);
+router.post("/login", userController.login);
 
-
-
-
-
-
-
-router.get('/*',function(req,res){
-    res.send('Böyle bir şey yok.')
-})
+router.get("/*", function (req, res) {
+  res.send("Böyle bir şey yok.");
+});
 
 module.exports = router;

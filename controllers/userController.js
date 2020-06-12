@@ -9,8 +9,13 @@ module.exports = {
 */
 
 //property named 'login' will be added to what's getting exported from this file
-exports.login = function(){
-    
+exports.login = function(req, res){
+    let user = new User(req.body)
+    //callback function ile login'i beklediğimiz method
+    user.login(function(result){
+        res.send(result)
+    })
+
 }
 
 exports.logout = function(){
