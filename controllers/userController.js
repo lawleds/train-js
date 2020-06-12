@@ -1,3 +1,5 @@
+const User = require('../models/User.js')
+
 /*
 If exporting multiple functions is desired, this is first alternative:
 module.exports = {
@@ -15,8 +17,14 @@ exports.logout = function(){
     
 }
 
-exports.register = function(){
-
+exports.register = function(req, res){
+    let user = new User(req.body)//create new object using this as its blueprint
+    user.register()
+    if(user.errors.length > 0){
+        res.send(user.errors)
+    }else{
+        res.send('Ty for reg')
+    }
 }
 
 exports.home = function(req, res){
