@@ -1,5 +1,5 @@
 const { default: validator } = require("validator");
-const usersCollection = require("../db").collection("users");
+const usersCollection = require("../db").db().collection("users");
 const bcrypt = require("bcryptjs");
 
 //constructor function. Reusable blueprint to create user objects

@@ -1,19 +1,23 @@
 const express = require("express");
 const session = require("express-session")
+const MongoStore = require("connect-mongo")(session)//this is a blueprint for
+const flash = require("connect-flash");
 const app = express();
 
 //figuration options for how we want to use
 let sessionOptions = session({
     secret: "Sth that noone will ever guess",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
+    store: new MongoStore({client: require('./db')}),//Default olarak memory. Bunu yapmak yeterli olacak connect-mongo direkt 
+    resave: false,                                   //olarak session açtığın yerde database'e session collection'ı koyup dolduruyor.
+    saveUninitialized: false,                        //ve db'deki _id fieldı ile browserdaki cookie id eşleşiyor bu şekilde iletişim.
+    cookie: {         //connect.sid in browser       //ve bu ayarları falan da tutuyor cookienin bitişini, verdiğimiz user değerini..
         maxAge: 1000 * 60 * 60 * 24, //How long the cookie for a session is valid before it expires in milisecond THIS IS ONE DAY
         httpOnly: true
     }
 })
 
 app.use(sessionOptions);
+app.use(flash());
 
 const router = require("./router.js");
 
