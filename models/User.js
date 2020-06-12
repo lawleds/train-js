@@ -55,7 +55,7 @@ User.prototype.validate = function () {
     this.errors.push("Password must be at least 12 character.");
   }
 };
-
+/* Callbackli login
 User.prototype.login = function (callback) {
   this.cleanUp();
   usersCollection.findOne(
@@ -72,6 +72,78 @@ User.prototype.login = function (callback) {
     }
   );
 };
+*/
+
+//Promise ise;
+User.prototype.login = function () {
+  return new Promise((resolve, reject) => {
+    //arrow function for 'this'
+    this.cleanUp();
+    /*Bu da bir callback yapısı promise hali var
+    usersCollection.findOne({ username: this.data.username },
+      (err, attemptedUser) => {   Bu fonksiyonu findOne callback olarak çağırıyor
+        ...
+        //eğer ki arrow yapmazsak context değişecek ve 'this' keyword sıkıntıya girecek.
+        });
+    */
+
+    usersCollection
+      .findOne({ username: this.data.username }) //bu fonksiyonun promise döndürdüğünü biliyoruz o yüzden .then(...)
+      .then((attemptedUser) => {
+        if (attemptedUser && attemptedUser.password == this.data.password) {
+          //mongo kimseyi bulamazsa attempedU boş kalacak
+          resolve("Congrats");
+        } else {
+          //şifre falan yanlışsa ama adam buluşsa
+          reject("Invalid username or password");
+        }
+      })
+      .catch((e) => {
+        //database error
+        reject("Please try again later.");
+      });
+  });
+};
+/*          /////////////////////--PROMISE--/////////////////////
+      Promise Neden?
+  Birden fazla async eventin sonuçlarını arzu edilen sırada almak istediğimizde nested bir yapıya sahip olmak gerekiyor.
+  Manageable ve maintainability olmaktan çıkabilir kod.
+  eatOne(function(){
+    eatTwo(function(){
+      eatThree(function(){
+        ...
+      });});});
+
+  --Promise - bütün fonksiyonların return new Promise(resolve, reject){'someDBthings'}yaptığı bir koşulda;
+
+  eatOne().then(function(){      ||||    Arrow function yapabilir, tek satır olduğu için return ve süslü parantezler kalkabilir 
+    return eatTwo()              ||||      eatOne()
+  }).then(function(){            ||||       .then(() => eatTwo())
+    return eatThree              ||||       .then(() => eatThree()).catch(() => console.log(e))
+  }).catch(function(e){     Geleneksel callback yapısında olduğu gibi her biri için error dinlemeye ihtiyacımız yok.
+    console.log(e)          Sona koyulan tek catch yetiyor.
+  })
+          /////////////////////--AWAIT--/////////////////////
+    'await' sadece async function içerisinde kullanılan bir keyword.
+    eat fonksiyonları yine promise döndürüyorlar.
+    Yaptığı şey; bulunduğu fonksiyondan cevap dönene kadar sonraki satıra geçmemesi. 
+    Eğer ki error'u yakalamak istiyorsan try-catch içine alınacak.
+
+    async function runActions()
+    {
+      try{
+        await eatOne()
+        await eatTwo()
+        await eatThree()
+      }catch(err){
+        console.log(err)
+      }
+    }
+    runActions() //call function
+
+    **Eğer ki sıralamaları önemli değilse ama hepsi bittikten sonra bir işlem yapılmak isteniyorsa;
+    await Promise.all([promise1, promise2, promise3, promise4])
+*/
 
 User.prototype.register = function () {
   //Method her objeye kopyalanmayacak, 'User' constructor kullanan her obje buna erişebilecek
