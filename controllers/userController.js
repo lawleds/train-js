@@ -19,6 +19,13 @@ exports.login = function (req, res) {
   user
     .login()
     .then(function (result) {
+      //Server stores this session data AND it sends instructions to browser to create a cookie.
+      req.session.user = {username: user.data.username}//Request object has new session object that is unique per browser/visitor.
+      //Browser'da oluşturulan cookie'nin unique valuesu olur ve bu server memorysindeki session data için bir unique identifier.  
+      //Bir cookie varsa, her http request'i ile birlikte servera otomatik olarak gönderilir.
+      //Server da bunu görür ve bu session valuesunu bildiğine göre doğru bilgiler giren kullanıcı/browser olduğuna güvenebilirim.
+      /////////Session data memory'de tutulduğu için her değişiklik sonu yapılan ctrl+s ile server yeniden başlatılıyor ve
+      /////////bütün session kayboluyor. Bunun için mongodb'de tutacağız session'ı.
       res.send(result);
     })
     .catch(function (e) {
@@ -39,5 +46,9 @@ exports.register = function (req, res) {
 };
 
 exports.home = function (req, res) {
-  res.render("home-guest");
+  if(req.session.user){
+    res.send("Welcome to the actual application")
+  }else{
+    res.render("home-guest");
+  }
 };

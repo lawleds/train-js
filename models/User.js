@@ -1,5 +1,6 @@
 const { default: validator } = require("validator");
 const usersCollection = require("../db").collection("users");
+const bcrypt = require("bcryptjs");
 
 //constructor function. Reusable blueprint to create user objects
 let User = function (data) {
@@ -19,7 +20,7 @@ let User = function (data) {
   */
   //Şimdi bu yöntem çalışıyor, ama worth değil çünkü JS, yaratılan her bir objeye bu methodları kopyalıyor/ekliyor.
 };
-
+//Method her objeye kopyalanmayacak, 'User' constructor kullanan her obje buna erişebilecek
 User.prototype.cleanUp = function () {
   if (typeof this.data.username != "string") {
     this.data.username = "";
@@ -90,7 +91,7 @@ User.prototype.login = function () {
     usersCollection
       .findOne({ username: this.data.username }) //bu fonksiyonun promise döndürdüğünü biliyoruz o yüzden .then(...)
       .then((attemptedUser) => {
-        if (attemptedUser && attemptedUser.password == this.data.password) {
+        if (attemptedUser && bcrypt.compareSync(this.data.password, attemptedUser.password)) {
           //mongo kimseyi bulamazsa attempedU boş kalacak
           resolve("Congrats");
         } else {
@@ -105,6 +106,7 @@ User.prototype.login = function () {
   });
 };
 /*          /////////////////////--PROMISE--/////////////////////
+pending, resolved, rejected, 
       Promise Neden?
   Birden fazla async eventin sonuçlarını arzu edilen sırada almak istediğimizde nested bir yapıya sahip olmak gerekiyor.
   Manageable ve maintainability olmaktan çıkabilir kod.
@@ -122,7 +124,7 @@ User.prototype.login = function () {
     return eatThree              ||||       .then(() => eatThree()).catch(() => console.log(e))
   }).catch(function(e){     Geleneksel callback yapısında olduğu gibi her biri için error dinlemeye ihtiyacımız yok.
     console.log(e)          Sona koyulan tek catch yetiyor.
-  })
+  })THENleri dışarı koyuyoruz çünkü içindeki resolved olmadan diğerine geçmiyor zaten.
           /////////////////////--AWAIT--/////////////////////
     'await' sadece async function içerisinde kullanılan bir keyword.
     eat fonksiyonları yine promise döndürüyorlar.
@@ -146,12 +148,14 @@ User.prototype.login = function () {
 */
 
 User.prototype.register = function () {
-  //Method her objeye kopyalanmayacak, 'User' constructor kullanan her obje buna erişebilecek
   //Step #1: Validate user data
   this.cleanUp();
   this.validate(); //bunu da controllerdaki çağırıyor. user.validate()'ten farkı yok orası için.
   //Step #2: If there are no validation errors, save data into db.
   if (!this.errors.length) {
+    //hash user password
+    let salt = bcrypt.genSaltSync(10);
+    this.data.password = bcrypt.hashSync(this.data.password, salt);
     usersCollection.insertOne(this.data);
   }
 };

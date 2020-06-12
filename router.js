@@ -1,4 +1,7 @@
 const express = require("express");
+//require iki şey yapar
+//	1)it executes said file
+//	2)it returnes w/e file exports ve eşitlediğimiz değerde tutar
 const router = express.Router();
 const userController = require("./controllers/userController.js");
 
