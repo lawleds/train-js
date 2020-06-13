@@ -40,22 +40,38 @@ User.prototype.cleanUp = function () {
 };
 
 User.prototype.validate = function () {
-  if (
-    this.data.username == "" &&
-    validator.isAlphanumeric(this.data.username)
-  ) {
-    this.errors.push("Username must be provided.");
-  }
-  if (!validator.isEmail(this.data.email)) {
-    this.errors.push("Email must be an email.");
-  }
-  if (this.data.password == "") {
-    this.errors.push("Password must be provided.");
-  }
-  if (this.data.password.lenght > 0 && this.data.password.lenght < 12) {
-    this.errors.push("Password must be at least 12 character.");
-  }
+  return new Promise(async (resolve, reject) => {
+    //asağıda await yapabilmek için async
+    if (
+      this.data.username == "" &&
+      !validator.isAlphanumeric(this.data.username)
+    ) {
+      this.errors.push("Proper username must be provided.");
+    }
+    if (!validator.isEmail(this.data.email)) {
+      this.errors.push("Email must be an email.");
+    }
+    if (this.data.password == "") {
+      this.errors.push("Password must be provided.");
+    }
+    if (this.data.password.lenght > 0 && this.data.password.lenght < 12) {
+      this.errors.push("Password must be at least 12 character.");
+    }
+    //if username is unique
+    let usernameExists = await usersCollection.findOne({
+      username: this.data.username,
+    });
+    if (usernameExists) this.errors.push("That username is already taken.");
+
+    //if email is unique
+    let emailExists = await usersCollection.findOne({
+      email: this.data.email,
+    });
+    if (emailExists) this.errors.push("That email is already taken.");
+    resolve();
+  });
 };
+
 /* Callbackli login
 User.prototype.login = function (callback) {
   this.cleanUp();
@@ -91,7 +107,10 @@ User.prototype.login = function () {
     usersCollection
       .findOne({ username: this.data.username }) //bu fonksiyonun promise döndürdüğünü biliyoruz o yüzden .then(...)
       .then((attemptedUser) => {
-        if (attemptedUser && bcrypt.compareSync(this.data.password, attemptedUser.password)) {
+        if (
+          attemptedUser &&
+          bcrypt.compareSync(this.data.password, attemptedUser.password)
+        ) {
           //mongo kimseyi bulamazsa attempedU boş kalacak
           resolve("Congrats");
         } else {
@@ -148,16 +167,22 @@ pending, resolved, rejected,
 */
 
 User.prototype.register = function () {
-  //Step #1: Validate user data
-  this.cleanUp();
-  this.validate(); //bunu da controllerdaki çağırıyor. user.validate()'ten farkı yok orası için.
-  //Step #2: If there are no validation errors, save data into db.
-  if (!this.errors.length) {
-    //hash user password
-    let salt = bcrypt.genSaltSync(10);
-    this.data.password = bcrypt.hashSync(this.data.password, salt);
-    usersCollection.insertOne(this.data);
-  }
+  return new Promise(async (resolve, reject) => {
+    //Step #1: Validate user data
+    this.cleanUp();
+    //validation async olduğu için;
+    await this.validate(); //bunu da controllerdaki çağırıyor. user.validate()'ten farkı yok orası için.
+    //Step #2: If there are no validation errors, save data into db.
+    if (!this.errors.length) {
+      //hash user password
+      let salt = bcrypt.genSaltSync(10);
+      this.data.password = bcrypt.hashSync(this.data.password, salt);
+      await usersCollection.insertOne(this.data);
+      resolve();
+    }else{
+      reject(this.errors);
+    }
+  });
 };
 
 module.exports = User;

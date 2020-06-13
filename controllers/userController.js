@@ -52,19 +52,33 @@ exports.logout = function (req, res) {
 
 exports.register = function (req, res) {
   let user = new User(req.body); //create new object using this as its blueprint
-  user.register();
-  if (user.errors.length > 0) {
-    res.send(user.errors);
-  } else {
-    res.send("Ty for reg");
-  }
+  user
+    .register()
+    .then(() => {
+      req.session.user = { username: user.data.username };
+      req.session.save(function () {
+        res.redirect("/");
+      });
+    })
+    .catch((regErrors) => {
+      regErrors.forEach(function (item) {
+        req.flash("regErrors", item);
+      });
+      req.session.save(function () {
+        res.redirect("/");
+      });
+    });
 };
 
 exports.home = function (req, res) {
   if (req.session.user) {
+    //if session exists
     res.render("home-dashboard", { username: req.session.user.username }); //template render ederken obje olarak data pass edebiliriz
   } else {
-    res.render("home-guest", { errors: req.flash("errors") }); //flash package'ı bir koleksiyonu update vs yerine
+    res.render("home-guest", {
+      errors: req.flash("errors"),
+      regErrors: req.flash("regErrors"),
+    }); //flash package'ı bir koleksiyonu update vs yerine
     //çekmek için kullandığında, remove ediyor kendiliğinden.
   }
 };
