@@ -20,13 +20,13 @@ exports.login = function (req, res) {
     .login()
     .then(function (result) {
       //Server stores this session data AND it sends instructions to browser to create a cookie.
-      req.session.user = { username: user.data.username }; //Request object has new session object that is unique per browser/visitor.
-      //Browser'da oluşturulan cookie'nin unique valuesu olur ve bu server memorysindeki session data için bir unique identifier.
-      //Bir cookie varsa, her http request'i ile birlikte servera otomatik olarak gönderilir.
-      //Server da bunu görür ve bu session valuesunu bildiğine göre doğru bilgiler giren kullanıcı/browser olduğuna güvenebilirim.
-      /////////Session data memory'de tutulduğu için her değişiklik sonu yapılan ctrl+s ile server yeniden başlatılıyor ve
-      /////////bütün session kayboluyor. Bunun için mongodb'de tutacağız session'ı.
-
+      req.session.user = { avatar: user.avatar, username: user.data.username }; //Request object has new session object that is unique per browser/visitor.
+      /*Browser'da oluşturulan cookie'nin unique valuesu olur ve bu server memorysindeki session data için bir unique identifier.
+        Bir cookie varsa, her http request'i ile birlikte servera otomatik olarak gönderilir.
+        Server da bunu görür ve bu session valuesunu bildiğine göre doğru bilgiler giren kullanıcı/browser olduğuna güvenebilirim.
+        **Session data memory'de tutulduğu için her değişiklik sonu yapılan ctrl+s ile server yeniden başlatılıyor ve
+        **bütün session kayboluyor. Bunun için mongodb'de tutacağız session'ı.
+      */
       req.session.save(function () {
         //Yukarıdaki session tanınmlama otomatik olarak save ediyor db'ye aslında. ama biz bunu bu şekilde manuel hale
         //getirdik ki dbye kayıt async, function callback kullanabilelim.
@@ -55,7 +55,7 @@ exports.register = function (req, res) {
   user
     .register()
     .then(() => {
-      req.session.user = { username: user.data.username };
+      req.session.user = { username: user.data.username, avatar: user.avatar };
       req.session.save(function () {
         res.redirect("/");
       });
@@ -73,7 +73,7 @@ exports.register = function (req, res) {
 exports.home = function (req, res) {
   if (req.session.user) {
     //if session exists
-    res.render("home-dashboard", { username: req.session.user.username }); //template render ederken obje olarak data pass edebiliriz
+    res.render("home-dashboard", { username: req.session.user.username, avatar: req.session.user.avatar }); //template render ederken obje olarak data pass edebiliriz
   } else {
     res.render("home-guest", {
       errors: req.flash("errors"),

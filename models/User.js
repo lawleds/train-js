@@ -1,6 +1,7 @@
 const { default: validator } = require("validator");
 const usersCollection = require("../db").db().collection("users");
 const bcrypt = require("bcryptjs");
+const md5 = require("md5");
 
 //constructor function. Reusable blueprint to create user objects
 let User = function (data) {
@@ -112,6 +113,8 @@ User.prototype.login = function () {
           bcrypt.compareSync(this.data.password, attemptedUser.password)
         ) {
           //mongo kimseyi bulamazsa attempedU boş kalacak
+          this.data = attemptedUser;//getAvatar'a email sağlamak için
+          this.getAvatar(); //db'de saklamak yerine, ihtiyacımız olduğunda fonksiyonu kullanarak çekeceğiz. Store in memory(user object)
           resolve("Congrats");
         } else {
           //şifre falan yanlışsa ama adam buluşsa
@@ -178,11 +181,17 @@ User.prototype.register = function () {
       let salt = bcrypt.genSaltSync(10);
       this.data.password = bcrypt.hashSync(this.data.password, salt);
       await usersCollection.insertOne(this.data);
+      this.getAvatar(); //db'de saklamak yerine, ihtiyacımız olduğunda fonksiyonu kullanarak çekeceğiz. Store in memory(user object)
       resolve();
-    }else{
+    } else {
       reject(this.errors);
     }
   });
+};
+
+User.prototype.getAvatar = function () {
+  this.avatar = `https://gravatar.com/avatar/${md5(this.data.email)}?s=128`;
+  //this.data.avatar değil çünkü this.data constructordan geliyordu bu burada üretildi.
 };
 
 module.exports = User;
