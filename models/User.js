@@ -113,7 +113,7 @@ User.prototype.login = function () {
           bcrypt.compareSync(this.data.password, attemptedUser.password)
         ) {
           //mongo kimseyi bulamazsa attempedU boş kalacak
-          this.data = attemptedUser;//getAvatar'a email sağlamak için
+          this.data = attemptedUser; //getAvatar'a email sağlamak için
           this.getAvatar(); //db'de saklamak yerine, ihtiyacımız olduğunda fonksiyonu kullanarak çekeceğiz. Store in memory(user object)
           resolve("Congrats");
         } else {

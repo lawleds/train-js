@@ -1,16 +1,17 @@
 const User = require("../models/User.js");
 
 //middleware
-exports.mustBeLoggedIn = function(req, res, next){
-  if(req.session.user){
-    next()
-  }else{
-    req.flash("errors", "You must be logged in to perform that action.")
-    req.session.save(function(){//manual save; flashı kaydetmeden yönlendirmeyelim.
-      res.redirect("/")
-    })
+exports.mustBeLoggedIn = function (req, res, next) {
+  if (req.session.user) {
+    next();
+  } else {
+    req.flash("errors", "You must be logged in to perform that action.");
+    req.session.save(function () {
+      //manual save; flashı kaydetmeden yönlendirmeyelim.
+      res.redirect("/");
+    });
   }
-}
+};
 
 /*
 If exporting multiple functions is desired, this is first alternative:
@@ -32,7 +33,11 @@ exports.login = function (req, res) {
     .login()
     .then(function (result) {
       //Server stores this session data AND it sends instructions to browser to create a cookie.
-      req.session.user = { avatar: user.avatar, username: user.data.username }; //Request object has new session object that is unique per browser/visitor.
+      req.session.user = {
+        avatar: user.avatar,
+        username: user.data.username,
+        _id: user.data._id,
+      }; //Request object has new session object that is unique per browser/visitor.
       /*Browser'da oluşturulan cookie'nin unique valuesu olur ve bu server memorysindeki session data için bir unique identifier.
         Bir cookie varsa, her http request'i ile birlikte servera otomatik olarak gönderilir.
         Server da bunu görür ve bu session valuesunu bildiğine göre doğru bilgiler giren kullanıcı/browser olduğuna güvenebilirim.
@@ -67,7 +72,13 @@ exports.register = function (req, res) {
   user
     .register()
     .then(() => {
-      req.session.user = { username: user.data.username, avatar: user.avatar };
+      req.session.user = {
+        username: user.data.username,
+        avatar: user.avatar,
+        _id: user.data._id,
+      };
+      //register method'unda inserOne modifies the object
+      //if it doesn't already contain an _id property
       req.session.save(function () {
         res.redirect("/");
       });
@@ -85,7 +96,7 @@ exports.register = function (req, res) {
 exports.home = function (req, res) {
   if (req.session.user) {
     //if session exists
-    res.render("home-dashboard")//, { username: req.session.user.username, avatar: req.session.user.avatar });template render ederken obje olarak data pass edebiliriz
+    res.render("home-dashboard"); //, { username: req.session.user.username, avatar: req.session.user.avatar });template render ederken obje olarak data pass edebiliriz
   } else {
     res.render("home-guest", {
       errors: req.flash("errors"),

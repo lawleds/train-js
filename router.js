@@ -15,6 +15,7 @@ router.post("/logout", userController.logout);
 
 //post routes
 router.get("/create-post", userController.mustBeLoggedIn, postController.viewCreateScreen);//checking if user logged in
+router.post("/create-post", userController.mustBeLoggedIn, postController.create);
 
 router.get("/*", function (req, res) {
   res.send("Böyle bir şey yok.");
