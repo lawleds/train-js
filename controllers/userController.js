@@ -1,5 +1,17 @@
 const User = require("../models/User.js");
 
+//middleware
+exports.mustBeLoggedIn = function(req, res, next){
+  if(req.session.user){
+    next()
+  }else{
+    req.flash("errors", "You must be logged in to perform that action.")
+    req.session.save(function(){//manual save; flashı kaydetmeden yönlendirmeyelim.
+      res.redirect("/")
+    })
+  }
+}
+
 /*
 If exporting multiple functions is desired, this is first alternative:
 module.exports = {
@@ -73,7 +85,7 @@ exports.register = function (req, res) {
 exports.home = function (req, res) {
   if (req.session.user) {
     //if session exists
-    res.render("home-dashboard", { username: req.session.user.username, avatar: req.session.user.avatar }); //template render ederken obje olarak data pass edebiliriz
+    res.render("home-dashboard")//, { username: req.session.user.username, avatar: req.session.user.avatar });template render ederken obje olarak data pass edebiliriz
   } else {
     res.render("home-guest", {
       errors: req.flash("errors"),

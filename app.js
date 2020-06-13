@@ -19,6 +19,12 @@ let sessionOptions = session({
 app.use(sessionOptions);
 app.use(flash());
 
+//routerdan önce çalışacak buraya koyduk diye. middleware.
+app.use(function(req, res, next){
+    res.locals.user = req.session.user//res.locals is an object that will be available within ejs templates
+    next()
+})
+
 const router = require("./router.js");
 
 app.use(express.urlencoded({extended: false}))//takes submitted form data and add it to body of request
