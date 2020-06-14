@@ -4,9 +4,13 @@ const bcrypt = require("bcryptjs");
 const md5 = require("md5");
 
 //constructor function. Reusable blueprint to create user objects
-let User = function (data) {
+let User = function (data, getAvatar) {
   this.data = data;
   this.errors = [];
+  if (getAvatar == undefined) {
+    getAvatar = false;
+  }
+  if (getAvatar) this.getAvatar();
   /*
   'this', bu fonksiyonu execute eden yere aittir.
    Biz controllerda let user = new User() dediğimizde, constructor func.'ı new çağırıyor, ve bu yeni obje çağırdığı için
