@@ -30,7 +30,14 @@ exports.viewSingle = async function (req, res) {
 exports.viewEditScreen = async function (req, res) {
   try {
     let post = await Post.findSingleById(req.params.id);
-    res.render("edit-post", { post: post });
+    if(post.authodId == req.visitorId){
+      res.render("edit-post", { post: post });
+    }else{
+      req.flash("errors", "You don't have permission for that action")
+      req.session.save(function(){
+        res.redirect('/')
+      })
+    }
   } catch {
     res.render("404");
   }

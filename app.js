@@ -2,6 +2,8 @@ const express = require("express");
 const session = require("express-session")
 const MongoStore = require("connect-mongo")(session)//this is a blueprint for
 const flash = require("connect-flash");
+const markdown = require('marked')
+
 const app = express();
 
 //figuration options for how we want to use
@@ -21,6 +23,11 @@ app.use(flash());
 
 //routerdan önce çalışacak buraya koyduk diye. middleware.
 app.use(function(req, res, next){
+    //markdown available in ejs
+    res.locals.filterUserHTML = function(content){
+        return markdown(content)
+    }
+
     //all error and success messages available for all templates
     res.locals.errors = req.flash("errors")
     res.locals.success = req.flash("success")
