@@ -17,6 +17,8 @@ router.post("/logout", userController.logout);
 router.get("/create-post", userController.mustBeLoggedIn, postController.viewCreateScreen);//checking if user logged in
 router.post("/create-post", userController.mustBeLoggedIn, postController.create);
 router.get("/post/:id", postController.viewSingle) //flexible url
+router.get("/post/:id/edit", postController.viewEditScreen)
+router.post("/post/:id/edit", postController.edit)
 
 //profile routes
 router.get('/profile/:username', userController.ifUserExists, userController.profilePostsScreen);

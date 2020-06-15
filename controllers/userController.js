@@ -100,7 +100,6 @@ exports.home = function (req, res) {
     res.render("home-dashboard"); //, { username: req.session.user.username, avatar: req.session.user.avatar });template render ederken obje olarak data pass edebiliriz
   } else {
     res.render("home-guest", {
-      errors: req.flash("errors"),
       regErrors: req.flash("regErrors"),
     }); //flash package'ı bir koleksiyonu update vs yerine
     //çekmek için kullandığında, remove ediyor kendiliğinden.
