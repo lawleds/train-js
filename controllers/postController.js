@@ -18,7 +18,8 @@ exports.create = function (req, res) {
 
 exports.viewSingle = async function (req, res) {
   try {
-    let post = await Post.findSingleById(req.params.id); //URL parametresi olarak :id demiştik. Ve new yapmadık, fonksiyon uydurduk.
+    let post = await Post.findSingleById(req.params.id, req.visitorId); //URL parametresi olarak :id demiştik. Ve new yapmadık, fonksiyon uydurduk.
+    console.log(post)
     res.render("single-post-screen", { post: post });
   } catch (error) {
     //eğer ki URL parametresi tamamen alakasız bir şey gelirse buraya düşer

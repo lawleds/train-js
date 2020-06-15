@@ -18,6 +18,9 @@ router.get("/create-post", userController.mustBeLoggedIn, postController.viewCre
 router.post("/create-post", userController.mustBeLoggedIn, postController.create);
 router.get("/post/:id", postController.viewSingle) //flexible url
 
+//profile routes
+router.get('/profile/:username', userController.ifUserExists, userController.profilePostsScreen);
+
 
 router.get("/*", function (req, res) {
   res.send("Böyle bir şey yok.");

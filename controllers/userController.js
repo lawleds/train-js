@@ -1,4 +1,5 @@
 const User = require("../models/User.js");
+const Post = require("../models/Post.js");
 
 //middleware
 exports.mustBeLoggedIn = function (req, res, next) {
@@ -104,4 +105,31 @@ exports.home = function (req, res) {
     }); //flash package'ı bir koleksiyonu update vs yerine
     //çekmek için kullandığında, remove ediyor kendiliğinden.
   }
+};
+
+exports.ifUserExists = function (req, res, next) {
+  User.findByUsername(req.params.username)
+    .then(function (userDocument) {
+      req.profileUser = userDocument; //creating new property on request object. middleware ya, diğerine geçerken götürecek
+      next();
+    })
+    .catch(function () {
+      res.render("404");
+    });
+};
+
+exports.profilePostsScreen = function (req, res) {
+  //ask post model for posts by a certain author id
+  Post.findByAuthorId(req.profileUser._id)
+    .then(function (posts) {
+      console.log(req.profileUser.avatar)
+      res.render("profile", {
+        posts: posts,
+        profileUsername: req.profileUser.username,
+        profileAvatar: req.profileUser.avatar,
+      });
+    })
+    .catch(function () {
+      res.render("404");
+    });
 };

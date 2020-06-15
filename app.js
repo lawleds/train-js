@@ -21,6 +21,10 @@ app.use(flash());
 
 //routerdan önce çalışacak buraya koyduk diye. middleware.
 app.use(function(req, res, next){
+    //make current user id available on the req object
+    if(req.session.user)req.visitorId = req.session.user._id
+    else req.visitorId = 0
+    //make user session data available from within view templates. ejs içinde user deyince erişiliyor
     res.locals.user = req.session.user//res.locals is an object that will be available within ejs templates
     next()
 })

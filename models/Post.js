@@ -1,13 +1,12 @@
 const postsCollection = require("../db").db().collection("posts");
 const ObjectID = require("mongodb").ObjectID;
-const User = require('./User')
+const User = require("./User");
 
 //construction function
 let Post = function (data, userid) {
   this.data = data;
   this.errors = [];
   this.userid = userid;
-  console.log("burası constructor:" + this.data.title);
 };
 
 Post.prototype.cleanUp = function () {
@@ -52,8 +51,49 @@ Post.prototype.create = function () {
   });
 };
 
+Post.reusablePostQuery = function (uniqueOperations, visitorId) {
+  return new Promise(async function (resolve, reject) {
+    //concat returns new array, joins them.
+    let aggOperations = uniqueOperations.concat([
+      {
+        $lookup: {
+          //looking up documents from another collection
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "authorDocument",
+        },
+      },
+      {
+        $project: {
+          title: 1,
+          body: 1,
+          createdDate: 1,
+          authodId: "$author", //mongodb'de eğer $ koyarsan, bu öylesine değil, fieldın adı.
+          author: { $arrayElemAt: ["$authorDocument", 0] }, //authorDocument array'inin ilk elementini döndürüyor
+          //(yani bilgiler olan ilk objesi)
+        },
+      },
+    ]);
+    //let post = await postsCollection.findOne({ _id: new ObjectID(id) }) aggregate is great when performing multiple operations
+    let posts = await postsCollection.aggregate(aggOperations).toArray(); //returns data makes sense for mongodb, not for JS so .toArray()
+
+    //clean up author property in each post obj.
+    posts = posts.map(function (post) {
+      post.isVisitorOwner = post.authodId.equals(visitorId);
+      post.author = {
+        username: post.author.username,
+        avatar: new User(post.author, true), //sonuna bir .avatar gelmeliydi
+      };
+      return post;
+    });
+    resolve(posts);
+  });
+};
+
 //In JS, function is an object, so we can add properties or function to a function.(Post is a function beginning of the page)
-Post.findSingleById = function (id) {
+//OOP approach gerekli değil burada o yüzden prototype'a eklemek gerekli değil.
+Post.findSingleById = function (id, visitorId) {
   return new Promise(async function (resolve, reject) {
     if (typeof id != "string" || !ObjectID.isValid(id)) {
       //kullanıcıdan gelen veriyle databasele yapacağımız her interaksiyonda, verinin sadece bir string olduğundan emin ol.
@@ -61,39 +101,12 @@ Post.findSingleById = function (id) {
       reject();
       return;
     }
-    //let post = await postsCollection.findOne({ _id: new ObjectID(id) }) aggregate is great when performing multiple operations
-    let posts = await postsCollection
-      .aggregate([
-        { $match: { _id: new ObjectID(id) } },
-        {
-          $lookup: {
-            //looking up documents from another collection
-            from: "users",
-            localField: "author",
-            foreignField: "_id",
-            as: "authorDocument",
-          },
-        },
-        {
-          $project: {
-            title: 1,
-            body: 1,
-            createdDate: 1,
-            author: { $arrayElemAt: ["$authorDocument", 0] }, //authorDocument array'inin ilk elementini döndürüyor
-            //(yani bilgiler olan ilk objesi)
-          },
-        },
-      ])
-      .toArray(); //returns data makes sense for mongodb, not for JS so .toArray()
 
-      //clean up author property in each post obj.
-      posts = posts.map(function(post){
-        post.author = {
-          username: post.author.username,
-          avatar: new User(post.author, true)
-        }
-        return post
-      })
+    //Buradaki aggregatei, operasyonun için tanımlayacak şekilde üstteki fonksiyona aktardık.
+    let posts = await Post.reusablePostQuery(
+      [{ $match: { _id: new ObjectID(id) } }],
+      visitorId
+    );
 
     if (posts.length) {
       console.log(posts[0]);
@@ -102,6 +115,13 @@ Post.findSingleById = function (id) {
       reject();
     }
   });
+};
+
+Post.findByAuthorId = function (authodId) {
+  return Post.reusablePostQuery([
+    { $match: { author: authodId } },
+    { $sort: { createdDate: -1 } }, //createdDate 1 for asc. -1 for desc.
+  ]);
 };
 
 module.exports = Post;
